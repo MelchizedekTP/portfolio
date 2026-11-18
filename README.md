@@ -23,6 +23,9 @@ Copy the sheet ID from the URL: `https://docs.google.com/spreadsheets/d/`**`THIS
 4. **Credentials → Create credentials → OAuth client ID → Web application**
    - Authorized JavaScript origins: `https://<your-github-username>.github.io`
      (add `http://localhost:8000` too if you want to test locally)
+   - Authorized redirect URIs (for "Sign in without popup"): add the exact page address, e.g.
+     `https://<your-github-username>.github.io/<repo>/` (with the trailing `/`). If people open
+     `.../<repo>/index.html`, add that address as well.
    - Copy the **Client ID**.
 
 ## 3. Configure and publish
