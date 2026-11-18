@@ -1,0 +1,690 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1720">
+<title>Portfolio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+/* ============ CONFIG IS IN THE <script> AT THE BOTTOM ============ */
+:root{
+  --bg:#f4f5f2; --surface:#ffffff; --surface-2:#eef0ec; --ink:#14181c; --muted:#646b72;
+  --line:#e1e4de; --accent:#1f6f5c; --accent-ink:#ffffff; --up:#13804b; --down:#c2362b;
+  --shadow:0 1px 2px rgba(20,24,28,.06),0 4px 16px rgba(20,24,28,.05);
+  --r:14px;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1720; --surface:#17212b; --surface-2:#1e2a36; --ink:#e8ecef; --muted:#93a0ab;
+    --line:#26333f; --accent:#4cc3a0; --accent-ink:#06261d; --up:#4ccf8a; --down:#ff7a6e;
+    --shadow:none;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1720; --surface:#17212b; --surface-2:#1e2a36; --ink:#e8ecef; --muted:#93a0ab;
+  --line:#26333f; --accent:#4cc3a0; --accent-ink:#06261d; --up:#4ccf8a; --down:#ff7a6e;
+  --shadow:none;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--ink);font:15px/1.45 Inter,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased;min-height:100dvh;padding-bottom:calc(150px + env(safe-area-inset-bottom))}
+.num{font-family:"JetBrains Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.up{color:var(--up)} .down{color:var(--down)} .muted{color:var(--muted)}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:640px;margin:0 auto;padding:0 16px}
+
+header.top{position:sticky;top:0;z-index:5;background:color-mix(in srgb,var(--bg) 88%,transparent);
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;align-items:center;gap:10px;height:56px}
+header.top h1{font-size:17px;font-weight:700;margin:0;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.icon-btn{border:0;background:transparent;width:40px;height:40px;border-radius:10px;display:grid;place-items:center;cursor:pointer;color:var(--ink)}
+.icon-btn:active{background:var(--surface-2)}
+.icon-btn svg{width:22px;height:22px}
+
+.hero{margin:16px 0;padding:18px;border-radius:var(--r);background:var(--accent);color:var(--accent-ink)}
+.hero .lbl{font-size:12px;opacity:.85;text-transform:uppercase;letter-spacing:.06em}
+.hero .big{font-size:30px;font-weight:600;margin:2px 0 12px}
+.hero .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.hero .grid div{min-width:0}
+.hero .grid .v{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hero .grid .k{font-size:11px;opacity:.8}
+
+.sec-h{display:flex;align-items:center;justify-content:space-between;margin:20px 2px 8px}
+.sec-h h2{font-size:13px;margin:0;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:600}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
+.list{overflow:hidden}
+.row{display:flex;align-items:center;gap:12px;padding:13px 14px;border-top:1px solid var(--line);cursor:pointer;
+  text-decoration:none;color:inherit;width:100%;background:none;border-left:0;border-right:0;border-bottom:0;text-align:left}
+.row:first-child{border-top:0}
+.row:active{background:var(--surface-2)}
+.row .main{flex:1;min-width:0}
+.row .t{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .s{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .end{text-align:right;flex-shrink:0}
+.row .end .t{font-weight:600}
+.row.closed{opacity:.55}
+.chip{display:inline-block;font-size:11px;font-weight:600;padding:2px 7px;border-radius:99px;background:var(--surface-2);color:var(--muted)}
+.chip.buy{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
+.chip.sell{background:color-mix(in srgb,var(--down) 15%,transparent);color:var(--down)}
+.chip.warn{background:color-mix(in srgb,#d08a00 18%,transparent);color:#b07400}
+
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:16px 0}
+.stat{padding:12px 14px}
+.stat .k{font-size:12px;color:var(--muted)}
+.stat .v{font-size:18px;font-weight:600;margin-top:2px}
+
+.btn{border:0;border-radius:12px;padding:12px 16px;font-weight:600;cursor:pointer;background:var(--accent);color:var(--accent-ink);
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:46px}
+.btn.ghost{background:var(--surface-2);color:var(--ink)}
+.btn.danger{background:transparent;color:var(--down);border:1px solid color-mix(in srgb,var(--down) 40%,transparent)}
+.btn.block{width:100%}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.sm{min-height:36px;padding:7px 12px;font-size:13.5px;border-radius:10px}
+
+nav.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);
+  padding-bottom:env(safe-area-inset-bottom)}
+nav.tabs .wrap{display:flex;height:62px}
+nav.tabs a{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;font-size:11.5px;
+  font-weight:600;color:var(--muted);text-decoration:none}
+nav.tabs a svg{width:22px;height:22px}
+nav.tabs a.on{color:var(--accent)}
+.fab{position:fixed;right:max(16px,calc(50% - 304px));bottom:calc(78px + env(safe-area-inset-bottom));z-index:6;
+  width:56px;height:56px;border-radius:18px;border:0;background:var(--accent);color:var(--accent-ink);
+  box-shadow:0 6px 20px rgba(0,0,0,.2);display:grid;place-items:center;cursor:pointer}
+.fab svg{width:26px;height:26px}
+
+/* bottom sheet */
+dialog.sheet{border:0;padding:0;margin:auto auto 0;width:100%;max-width:640px;max-height:92dvh;background:var(--surface);color:var(--ink);
+  border-radius:20px 20px 0 0;box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+dialog.sheet::backdrop{background:rgba(5,10,15,.45)}
+@media (min-width:700px){dialog.sheet{margin:auto;border-radius:20px}}
+.sheet-in{padding:8px 18px calc(18px + env(safe-area-inset-bottom))}
+.grab{width:40px;height:4px;border-radius:4px;background:var(--line);margin:4px auto 10px}
+.sheet h3{margin:0 0 14px;font-size:18px}
+.field{margin-bottom:14px}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px}
+.field input,.field select{width:100%;height:48px;padding:0 14px;border-radius:12px;border:1px solid var(--line);background:var(--bg);font-size:16px}
+.field input:focus{outline:2px solid var(--accent);outline-offset:-1px;border-color:transparent}
+.field .hint{font-size:12px;color:var(--muted);margin-top:5px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.seg{display:grid;grid-template-columns:1fr 1fr;background:var(--surface-2);border-radius:12px;padding:4px;margin-bottom:14px}
+.seg button{border:0;background:transparent;height:40px;border-radius:9px;font-weight:600;cursor:pointer;color:var(--muted)}
+.seg button.on{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+.seg button.on[data-v="buy"],.seg button.on[data-v="DEP"]{color:var(--up)}
+.seg button.on[data-v="sell"],.seg button.on[data-v="WIT"]{color:var(--down)}
+.actions{display:flex;gap:10px;margin-top:6px}
+.actions .btn{flex:1}
+.preview{font-size:13px;color:var(--muted);margin:-4px 0 14px}
+
+.center{min-height:70dvh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:14px;padding:24px}
+.center h2{margin:0;font-size:22px}
+.center p{margin:0;color:var(--muted);max-width:340px}
+.logo{width:64px;height:64px;border-radius:18px;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center}
+.logo svg{width:34px;height:34px}
+.gbtn{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
+.empty{padding:28px 16px;text-align:center;color:var(--muted)}
+.spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;left:50%;transform:translateX(-50%) translateY(20px);bottom:calc(150px + env(safe-area-inset-bottom));z-index:50;
+  background:var(--ink);color:var(--bg);padding:11px 16px;border-radius:12px;font-size:14px;max-width:calc(100% - 32px);
+  opacity:0;pointer-events:none;transition:.25s}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.toast.err{background:var(--down);color:#fff}
+.busy{position:fixed;inset:0;z-index:60;background:rgba(5,10,15,.25);display:none;place-items:center}
+.busy.show{display:grid}
+.busy .spinner{border-color:rgba(255,255,255,.35);border-top-color:#fff;width:36px;height:36px}
+.who{font-size:12px;color:var(--muted);text-align:center;margin:26px 0 8px}
+.who a{color:var(--accent);font-weight:600;cursor:pointer}
+.ro{margin:12px 0 0;padding:10px 12px;border-radius:12px;background:color-mix(in srgb,#d08a00 14%,transparent);color:#9a6600;font-size:13px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<header class="top"><div class="wrap">
+  <button class="icon-btn" id="backBtn" hidden aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg></button>
+  <h1 id="title">Portfolio</h1>
+  <button class="icon-btn" id="editStockBtn" hidden aria-label="Edit stock"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg></button>
+  <button class="icon-btn" id="refreshBtn" hidden aria-label="Refresh"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 11-2.6-6.4L21 8"/><path d="M21 3v5h-5"/></svg></button>
+</div></header>
+
+<main class="wrap" id="app"></main>
+
+<button class="fab" id="fab" hidden aria-label="Add"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+
+<nav class="tabs" id="tabs" hidden><div class="wrap">
+  <a href="#/" data-tab="portfolio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/></svg>Portfolio</a>
+  <a href="#/cash" data-tab="cash"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="6" width="20" height="13" rx="2"/><circle cx="12" cy="12.5" r="2.5"/><path d="M6 6V4h12v2"/></svg>Cash flow</a>
+</div></nav>
+
+<dialog class="sheet" id="sheet"><div class="sheet-in"><div class="grab"></div><div id="sheetBody"></div></div></dialog>
+<div class="toast" id="toast"></div>
+<div class="busy" id="busy"><div class="spinner"></div></div>
+
+<script>
+/* =====================================================================
+   CONFIG — fill these two in (both are safe to keep in public code).
+   Access is controlled by Google: only accounts the sheet is shared
+   with can read it, and only Editors can save changes.
+   ===================================================================== */
+const CLIENT_ID = '677982929742-l8qp5en389qlmhloi6iu4k6k61kmsooe.apps.googleusercontent.com';
+const SHEET_ID  = '1TZILXsDwkAQQvo8An_L_xce-dRALl4wINy2odC_gTPA';
+
+/* Sheet layout (matches anson_portfollio_2026) */
+const DASH = 'Dash Temp', MEM = 'mem', CAGR = 'CAGR';
+const TX_FIRST = 5, TX_LAST = 30;          // transaction rows on each stock sheet
+const CF_FIRST = 3, CF_LAST = 27;          // CAGR rows (C30 sums B3:B27)
+const DASH_FIRST = 2, DASH_LAST = 31;      // Dash Temp name rows
+const NON_STOCK = new Set([DASH, MEM, CAGR, 'Temp Sheet', 'Dash Board']);
+
+/* ---------------- utilities ---------------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const q = name => `'${String(name).replace(/'/g, "''")}'`;               // quote sheet name for A1 ranges
+const isNum = v => typeof v === 'number' && isFinite(v);
+const n0 = v => isNum(v) ? v : 0;
+const inr = (v, d = 0) => isNum(v) ? '₹' + v.toLocaleString('en-IN', {minimumFractionDigits: d, maximumFractionDigits: d}) : '—';
+const inr2 = v => inr(v, 2);
+const signed = (v, f = inr) => isNum(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + f(Math.abs(v)) : '—';
+const pct = v => isNum(v) ? (v > 0 ? '+' : v < 0 ? '−' : '') + Math.abs(v * 100).toFixed(2) + '%' : '—';
+const cls = v => isNum(v) ? (v > 0 ? 'up' : v < 0 ? 'down' : '') : '';
+const qty = v => isNum(v) ? v.toLocaleString('en-IN', {maximumFractionDigits: 4}) : '—';
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+function serialToParts(s){ const d = new Date(Date.UTC(1899, 11, 30) + Math.round(s * 86400000)); return [d.getUTCFullYear(), d.getUTCMonth() + 1, d.getUTCDate()]; }
+function parseAnyDate(v){                    // -> [y,m,d] or null
+  if (isNum(v)) return serialToParts(v);
+  const m = String(v ?? '').trim().match(/^(\d{1,2})[\/\-.](\d{1,2})[\/\-.](\d{2,4})$/);   // dd/mm/yyyy (as typed in the sheet)
+  if (m) { let y = +m[3]; if (y < 100) y += 2000; if (+m[2] >= 1 && +m[2] <= 12 && +m[1] >= 1 && +m[1] <= 31) return [y, +m[2], +m[1]]; }
+  return null;
+}
+const showDate = v => { const p = parseAnyDate(v); return p ? `${p[2]} ${MON[p[1]-1]} ${p[0]}` : esc(v); };
+const isoDate = v => { const p = parseAnyDate(v); return p ? `${p[0]}-${String(p[1]).padStart(2,'0')}-${String(p[2]).padStart(2,'0')}` : ''; };
+const todayIso = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const dateFormula = iso => { const [y, m, d] = iso.split('-').map(Number); return `=DATE(${y},${m},${d})`; };  // locale-proof
+
+function toast(msg, err = false){ const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (err ? ' err' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', err ? 5000 : 2600); }
+const busy = on => $('#busy').classList.toggle('show', on);
+
+/* ---------------- auth (Google Identity Services) ---------------- */
+const SCOPES = 'https://www.googleapis.com/auth/spreadsheets email';
+let tokenClient, token = null, tokenExp = 0, pendingAuth = null, userEmail = '';
+function loadToken(){ try { const s = JSON.parse(sessionStorage.getItem('tok') || 'null'); if (s && s.exp > Date.now() + 60000) { token = s.t; tokenExp = s.exp; } } catch {} }
+function saveToken(){ try { sessionStorage.setItem('tok', JSON.stringify({t: token, exp: tokenExp})); } catch {} }
+
+function initAuth(){
+  tokenClient = google.accounts.oauth2.initTokenClient({
+    client_id: CLIENT_ID, scope: SCOPES,
+    callback: r => {
+      const p = pendingAuth; pendingAuth = null;
+      if (r.error) { p && p.reject(new Error(r.error)); return; }
+      token = r.access_token; tokenExp = Date.now() + (r.expires_in - 60) * 1000; saveToken();
+      p && p.resolve();
+    },
+    error_callback: e => { const p = pendingAuth; pendingAuth = null; p && p.reject(new Error(e.type || 'auth_failed')); }
+  });
+}
+function requestToken(prompt){
+  return new Promise((resolve, reject) => { pendingAuth = {resolve, reject}; tokenClient.requestAccessToken({prompt, hint: userEmail || undefined}); });
+}
+async function ensureToken(){ if (!token || Date.now() > tokenExp) await requestToken(''); }
+function signOut(){
+  if (token) google.accounts.oauth2.revoke(token, () => {});
+  token = null; tokenExp = 0; try { sessionStorage.removeItem('tok'); } catch {}
+  location.hash = '#/'; renderSignIn();
+}
+
+/* ---------------- Sheets API ---------------- */
+const BASE = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}`;
+async function api(path, {method = 'GET', body} = {}, retried = false){
+  await ensureToken();
+  const res = await fetch(path.startsWith('http') ? path : BASE + path, {
+    method, headers: {Authorization: `Bearer ${token}`, ...(body ? {'Content-Type': 'application/json'} : {})},
+    body: body ? JSON.stringify(body) : undefined
+  });
+  if (res.status === 401 && !retried) { token = null; return api(path, {method, body}, true); }
+  if (!res.ok) {
+    let msg = res.statusText; try { msg = (await res.json()).error.message; } catch {}
+    const e = new Error(msg); e.status = res.status; e.write = method !== 'GET'; throw e;
+  }
+  return res.json();
+}
+function friendly(e){
+  if (e.status === 403 && e.write) { state.readOnly = true; return 'You have view-only access. Ask the owner to share the sheet with you as Editor.'; }
+  if (e.status === 403 || e.status === 404) return 'This Google account does not have access to the portfolio sheet.';
+  return e.message || 'Something went wrong';
+}
+async function batchGet(ranges){
+  const qs = ranges.map(r => 'ranges=' + encodeURIComponent(r)).join('&');
+  const r = await api(`/values:batchGet?${qs}&valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER`);
+  return r.valueRanges.map(v => v.values || []);
+}
+const writeValues = data => api('/values:batchUpdate', {method: 'POST', body: {valueInputOption: 'USER_ENTERED', data}});
+const batchUpdate = requests => api(':batchUpdate', {method: 'POST', body: {requests}});
+
+/* ---------------- state + loading ---------------- */
+const state = {sheets: [], stocks: [], totals: {}, cash: [], cashSum: {}, memC4: 0, dashNames: [], readOnly: false, stock: null};
+const sheetId = title => (state.sheets.find(s => s.title === title) || {}).sheetId;
+
+async function loadAll(){
+  const [meta, vals] = await Promise.all([
+    api('?fields=sheets.properties(sheetId,title,index)'),
+    batchGet([`${q(DASH)}!A${DASH_FIRST}:J${DASH_LAST}`, `${q(DASH)}!F32:J32`, `${q(DASH)}!M1:N5`,
+              `${q(CAGR)}!A${CF_FIRST}:C${CF_LAST}`, `${q(CAGR)}!A28:D32`, `${q(MEM)}!C4`])
+  ]);
+  state.sheets = meta.sheets.map(s => s.properties);
+  const [dash, dashTot, net, cf, cfSum, mem] = vals;
+  state.dashNames = [];
+  state.stocks = [];
+  for (let i = 0; i <= DASH_LAST - DASH_FIRST; i++) {
+    const r = dash[i] || [];
+    state.dashNames.push(r[0] == null ? '' : String(r[0]));
+    const name = r[0] == null ? '' : String(r[0]).trim();
+    if (!name || /^\d+$/.test(name) || !sheetId(name)) continue;           // skip empty slots
+    state.stocks.push({row: DASH_FIRST + i, name, code: r[1], qty: r[2], avg: r[3], live: r[4], invested: r[5], value: r[6], perShare: r[7], pl: r[8], gain: r[9]});
+  }
+  const t = dashTot[0] || [], nv = net || [];
+  state.totals = {invested: t[0], value: t[1], pl: t[3], gain: t[4],
+                  net: (nv[0] || [])[0], capital: (nv[2] || [])[0], profit: (nv[4] || [])[0], profitPct: (nv[4] || [])[1]};
+  state.cash = [];
+  for (let i = 0; i <= CF_LAST - CF_FIRST; i++) {
+    const r = cf[i] || [];
+    if (r[0] == null && r[1] == null && r[2] == null) continue;
+    if (r.every(v => v === '' || v == null)) continue;
+    state.cash.push({row: CF_FIRST + i, date: r[0], amount: r[1], type: String(r[2] ?? '').trim()});
+  }
+  state.cashSum = {net: (cfSum[0] || [])[2], capital: (cfSum[2] || [])[2], profit: (cfSum[4] || [])[2], pct: (cfSum[4] || [])[3]};
+  state.memC4 = parseInt((mem[0] || [])[0], 10) || 0;
+}
+
+async function loadStock(name){
+  const [head, tx, fin] = await batchGet([`${q(name)}!A1:M1`, `${q(name)}!B${TX_FIRST}:M${TX_LAST}`, `${q(name)}!L32`]);
+  const h = head[0] || [];
+  const rows = [];
+  let lastUsed = TX_FIRST - 1;
+  for (let i = 0; i <= TX_LAST - TX_FIRST; i++) {
+    const r = tx[i] || [];
+    const [date, bq, br, sq, sr] = r;
+    const has = [date, bq, br, sq, sr].some(v => v !== '' && v != null && v !== 0);
+    if (!has) continue;
+    lastUsed = TX_FIRST + i;
+    rows.push({row: TX_FIRST + i, date, bq: n0(bq), br: n0(br), sq: n0(sq), sr: n0(sr), held: r[5], avgAfter: r[9], profit: r[10]});
+  }
+  state.stock = {name, code: h[3], live: h[5], avg: h[7], qty: h[9], margin: h[11], realised: (fin[0] || [])[0], rows, nextRow: lastUsed + 1};
+}
+
+/* ---------------- routing / rendering ---------------- */
+const app = $('#app');
+function setChrome({title, back = false, tabs = true, fab = null, edit = false}){
+  $('#title').textContent = title;
+  $('#backBtn').hidden = !back;
+  $('#tabs').hidden = !tabs;
+  $('#refreshBtn').hidden = false;
+  $('#editStockBtn').hidden = !edit || state.readOnly;
+  const f = $('#fab'); f.hidden = !fab || state.readOnly; f.onclick = fab;
+  document.querySelectorAll('nav.tabs a').forEach(a => a.classList.toggle('on', a.dataset.tab === (location.hash.startsWith('#/cash') ? 'cash' : 'portfolio')));
+}
+function loading(){ app.innerHTML = '<div class="center"><div class="spinner"></div></div>'; }
+const roNote = () => state.readOnly ? '<div class="ro">View-only: this account can see the sheet but not edit it.</div>' : '';
+const footer = () => `<div class="who">${userEmail ? 'Signed in as ' + esc(userEmail) + ' · ' : ''}<a id="so">Sign out</a> · <a href="https://docs.google.com/spreadsheets/d/${SHEET_ID}/edit" target="_blank" rel="noopener">Open sheet</a></div>`;
+function bindFooter(){ const s = $('#so'); if (s) s.onclick = signOut; }
+
+async function route(force = false){
+  const h = location.hash || '#/';
+  try {
+    if (force || !state.sheets.length) { loading(); await loadAll(); }
+    if (h.startsWith('#/stock/')) {
+      const name = decodeURIComponent(h.slice(8));
+      if (!sheetId(name)) { location.hash = '#/'; return; }
+      if (force || !state.stock || state.stock.name !== name) { loading(); await loadStock(name); }
+      renderStock();
+    } else if (h.startsWith('#/cash')) renderCash();
+    else renderPortfolio();
+  } catch (e) {
+    app.innerHTML = `<div class="center"><h2>Couldn't load</h2><p>${esc(friendly(e))}</p><button class="btn" id="retry">Try again</button>${footer()}</div>`;
+    $('#retry').onclick = () => route(true); bindFooter();
+  }
+}
+window.addEventListener('hashchange', () => route());
+$('#backBtn').onclick = () => history.length > 1 ? history.back() : (location.hash = '#/');
+$('#refreshBtn').onclick = () => route(true);
+
+function renderPortfolio(){
+  const T = state.totals;
+  const stocks = [...state.stocks].sort((a, b) => (n0(b.qty) > 0) - (n0(a.qty) > 0) || n0(b.value) - n0(a.value));
+  setChrome({title: 'Portfolio', fab: () => openStockForm(null)});
+  app.innerHTML = `
+    ${roNote()}
+    <section class="hero">
+      <div class="lbl">Current value</div>
+      <div class="big num">${inr(T.value)}</div>
+      <div class="grid">
+        <div><div class="k">Invested</div><div class="v num">${inr(T.invested)}</div></div>
+        <div><div class="k">Unrealised P/L</div><div class="v num">${signed(T.pl)}</div></div>
+        <div><div class="k">Return</div><div class="v num">${pct(T.gain)}</div></div>
+      </div>
+    </section>
+    <div class="sec-h"><h2>Holdings · ${stocks.filter(s => n0(s.qty) > 0).length}</h2></div>
+    <div class="card list">
+      ${stocks.length ? stocks.map(s => `
+        <a class="row ${n0(s.qty) > 0 ? '' : 'closed'}" href="#/stock/${encodeURIComponent(s.name)}">
+          <div class="main"><div class="t">${esc(s.name)}</div>
+            <div class="s num">${n0(s.qty) > 0 ? `${qty(s.qty)} × ${inr2(s.avg)} · LTP ${inr2(s.live)}` : 'No holding'}</div></div>
+          <div class="end"><div class="t num">${inr(s.value)}</div>
+            <div class="s num ${cls(s.pl)}">${signed(s.pl)} (${pct(s.gain)})</div></div>
+        </a>`).join('') : '<div class="empty">No stocks yet. Tap + to add one.</div>'}
+    </div>
+    <div class="sec-h"><h2>Overall</h2></div>
+    <div class="stats" style="margin-top:0">
+      <div class="card stat"><div class="k">Capital invested</div><div class="v num">${inr(T.capital)}</div></div>
+      <div class="card stat"><div class="k">Net profit</div><div class="v num ${cls(T.profit)}">${signed(T.profit)}</div><div class="k num ${cls(T.profitPct)}">${pct(T.profitPct)}</div></div>
+    </div>
+    ${footer()}`;
+  bindFooter();
+}
+
+function renderStock(){
+  const S = state.stock;
+  const full = S.nextRow > TX_LAST;
+  setChrome({title: S.name, back: true, tabs: false, edit: true, fab: full ? null : () => openTxForm(null)});
+  const unreal = isNum(S.qty) && isNum(S.live) && isNum(S.avg) ? (S.live - S.avg) * S.qty : null;
+  app.innerHTML = `
+    ${roNote()}
+    <div class="stats">
+      <div class="card stat"><div class="k">Holding</div><div class="v num">${qty(S.qty)}</div><div class="k">${esc(S.code || '')}</div></div>
+      <div class="card stat"><div class="k">Live price</div><div class="v num">${inr2(S.live)}</div><div class="k num ${cls(S.margin)}">${signed(S.margin, inr2)} vs avg</div></div>
+      <div class="card stat"><div class="k">Average price</div><div class="v num">${inr2(S.avg)}</div></div>
+      <div class="card stat"><div class="k">Unrealised P/L</div><div class="v num ${cls(unreal)}">${signed(unreal)}</div></div>
+      <div class="card stat" style="grid-column:1/-1"><div class="k">Realised profit (all sells)</div><div class="v num ${cls(S.realised)}">${signed(S.realised, inr2)}</div></div>
+    </div>
+    <div class="sec-h"><h2>Transactions · ${S.rows.length}</h2>${full ? '<span class="chip warn">Sheet full (rows 5–30)</span>' : ''}</div>
+    <div class="card list">
+      ${S.rows.length ? [...S.rows].reverse().map(r => {
+        const isBuy = r.bq > 0, isSell = r.sq > 0;
+        const lines = [];
+        if (isBuy) lines.push(`<span class="chip buy">BUY</span> <span class="num">${qty(r.bq)} × ${inr2(r.br)}</span>`);
+        if (isSell) lines.push(`<span class="chip sell">SELL</span> <span class="num">${qty(r.sq)} × ${inr2(r.sr)}</span>`);
+        return `<button class="row" data-row="${r.row}">
+          <div class="main"><div class="t">${lines.join(' ') || '<span class="chip">Empty</span>'}</div>
+            <div class="s">${showDate(r.date)} · holding after: <span class="num">${qty(r.held)}</span></div></div>
+          <div class="end"><div class="t num">${inr(r.bq * r.br + r.sq * r.sr)}</div>
+            ${isSell ? `<div class="s num ${cls(r.profit)}">${signed(r.profit)}</div>` : ''}</div>
+        </button>`;}).join('') : '<div class="empty">No transactions yet. Tap + to add a buy or sell.</div>'}
+    </div>
+    ${footer()}`;
+  app.querySelectorAll('[data-row]').forEach(b => b.onclick = () => openTxForm(S.rows.find(r => r.row === +b.dataset.row)));
+  $('#editStockBtn').onclick = () => openStockForm(S);
+  bindFooter();
+}
+
+function renderCash(){
+  const C = state.cashSum;
+  const full = (state.cash.at(-1)?.row ?? CF_FIRST - 1) >= CF_LAST;
+  setChrome({title: 'Cash flow', fab: full ? null : () => openCashForm(null)});
+  app.innerHTML = `
+    ${roNote()}
+    <section class="hero">
+      <div class="lbl">Net value today</div>
+      <div class="big num">${inr(C.net)}</div>
+      <div class="grid">
+        <div><div class="k">Capital invested</div><div class="v num">${inr(C.capital)}</div></div>
+        <div><div class="k">Profit</div><div class="v num">${signed(C.profit)}</div></div>
+        <div><div class="k">Return</div><div class="v num">${pct(C.pct)}</div></div>
+      </div>
+    </section>
+    <div class="sec-h"><h2>Deposits &amp; withdrawals</h2>${full ? '<span class="chip warn">Full (rows 3–27)</span>' : ''}</div>
+    <div class="card list">
+      ${state.cash.length ? [...state.cash].reverse().map(c => {
+        const bad = !isNum(c.amount);
+        const dep = isNum(c.amount) ? c.amount < 0 : /^DEP/i.test(c.type);
+        return `<button class="row" data-row="${c.row}">
+          <div class="main"><div class="t"><span class="chip ${dep ? 'buy' : 'sell'}">${dep ? 'DEPOSIT' : 'WITHDRAW'}</span>
+            ${bad ? '<span class="chip warn">Not a number – tap to fix</span>' : ''}</div>
+            <div class="s">${showDate(c.date)}</div></div>
+          <div class="end"><div class="t num">${bad ? esc(c.amount) : inr(Math.abs(c.amount))}</div></div>
+        </button>`;}).join('') : '<div class="empty">No entries yet.</div>'}
+    </div>
+    ${footer()}`;
+  app.querySelectorAll('[data-row]').forEach(b => b.onclick = () => openCashForm(state.cash.find(c => c.row === +b.dataset.row)));
+  bindFooter();
+}
+
+/* ---------------- bottom sheet helpers ---------------- */
+const sheet = $('#sheet');
+function openSheet(html, onMount){
+  $('#sheetBody').innerHTML = html;
+  if (!sheet.open) sheet.showModal();
+  onMount && onMount($('#sheetBody'));
+}
+const closeSheet = () => sheet.open && sheet.close();
+sheet.addEventListener('click', e => { if (e.target === sheet) closeSheet(); });
+function segment(root, name, onChange){
+  const seg = root.querySelector(`[data-seg="${name}"]`);
+  seg.querySelectorAll('button').forEach(b => b.onclick = () => {
+    seg.querySelectorAll('button').forEach(x => x.classList.toggle('on', x === b)); seg.dataset.value = b.dataset.v; onChange && onChange(b.dataset.v);
+  });
+}
+async function save(fn, okMsg){
+  busy(true);
+  try { await fn(); closeSheet(); toast(okMsg); }
+  catch (e) { toast(friendly(e), true); if (state.readOnly) route(); }
+  finally { busy(false); }
+}
+
+/* ---------------- transactions (stock sheet rows 5–30, cols B–F) ---------------- */
+function openTxForm(tx){
+  if (state.readOnly) return toast('View-only access', true);
+  const S = state.stock;
+  const type = tx ? (tx.sq > 0 && !tx.bq ? 'sell' : 'buy') : 'buy';
+  const both = tx && tx.bq > 0 && tx.sq > 0;
+  openSheet(`
+    <h3>${tx ? 'Edit' : 'Add'} transaction</h3>
+    ${both ? '<p class="preview">This row has both a buy and a sell. Saving here keeps only the type you choose.</p>' : ''}
+    <div class="seg" data-seg="type" data-value="${type}">
+      <button type="button" data-v="buy" class="${type === 'buy' ? 'on' : ''}">Buy</button>
+      <button type="button" data-v="sell" class="${type === 'sell' ? 'on' : ''}">Sell</button>
+    </div>
+    <form id="f">
+      <div class="field"><label>Date</label><input type="date" name="date" required value="${tx ? (isoDate(tx.date) || '') : todayIso()}">
+        ${tx && !isoDate(tx.date) && tx.date ? `<div class="hint">Sheet has “${esc(tx.date)}”; pick the correct date.</div>` : ''}</div>
+      <div class="two">
+        <div class="field"><label>Quantity</label><input name="qty" inputmode="decimal" required placeholder="0"
+          value="${tx ? (type === 'buy' ? tx.bq : tx.sq) || '' : ''}"></div>
+        <div class="field"><label>Price / share (₹)</label><input name="price" inputmode="decimal" required placeholder="0.00"
+          value="${tx ? (type === 'buy' ? tx.br : tx.sr) || '' : ''}"></div>
+      </div>
+      <div class="preview" id="pv"></div>
+      <div class="actions">
+        ${tx ? '<button type="button" class="btn danger" id="del">Delete</button>' : ''}
+        <button class="btn" type="submit">${tx ? 'Save' : 'Add'}</button>
+      </div>
+    </form>`, root => {
+      const f = root.querySelector('#f');
+      const seg = root.querySelector('[data-seg="type"]');
+      const pv = () => {
+        const qv = parseFloat(f.qty.value), pr = parseFloat(f.price.value);
+        root.querySelector('#pv').textContent = qv > 0 && pr > 0 ? `Total ${inr2(qv * pr)} · current holding ${qty(S.qty)}` : `Current holding ${qty(S.qty)}`;
+      };
+      segment(root, 'type', pv); f.oninput = pv; pv();
+      f.onsubmit = e => {
+        e.preventDefault();
+        const t = seg.dataset.value, qv = parseFloat(f.qty.value), pr = parseFloat(f.price.value);
+        if (!(qv > 0) || !(pr > 0)) return toast('Enter a quantity and price above 0', true);
+        if (!f.date.value) return toast('Pick a date', true);
+        const held = n0(S.qty) - (tx ? tx.bq - tx.sq : 0);   // holding excluding this row
+        if (t === 'sell' && qv > held + 1e-9) return toast(`You can sell at most ${qty(held)}`, true);
+        const row = tx ? tx.row : S.nextRow;
+        const vals = [dateFormula(f.date.value), t === 'buy' ? qv : '', t === 'buy' ? pr : '', t === 'sell' ? qv : '', t === 'sell' ? pr : ''];
+        save(async () => {
+          await writeValues([{range: `${q(S.name)}!B${row}:F${row}`, values: [vals]}]);
+          await Promise.all([loadStock(S.name), loadAll()]); renderStock();
+        }, tx ? 'Transaction updated' : (t === 'buy' ? 'Buy added' : 'Sell added'));
+      };
+      const d = root.querySelector('#del');
+      if (d) d.onclick = () => confirmDelete('Delete this transaction?', () => save(async () => {
+        await shiftUp(S.name, tx.row, TX_LAST, 1, 6);
+        await Promise.all([loadStock(S.name), loadAll()]); renderStock();
+      }, 'Transaction deleted'));
+  });
+}
+
+/* Remove one row inside a block by copying the rows below it up one, then clearing the last row.
+   Copy-paste (not cut) keeps the sheet's own formulas pointing at the right cells. */
+async function shiftUp(title, row, lastRow, colStart, colEnd){
+  const id = sheetId(title), reqs = [];
+  if (row < lastRow) reqs.push({copyPaste: {
+    source: {sheetId: id, startRowIndex: row, endRowIndex: lastRow, startColumnIndex: colStart, endColumnIndex: colEnd},
+    destination: {sheetId: id, startRowIndex: row - 1, endRowIndex: lastRow - 1, startColumnIndex: colStart, endColumnIndex: colEnd},
+    pasteType: 'PASTE_NORMAL'}});
+  reqs.push({repeatCell: {range: {sheetId: id, startRowIndex: lastRow - 1, endRowIndex: lastRow, startColumnIndex: colStart, endColumnIndex: colEnd},
+    cell: {}, fields: 'userEnteredValue'}});
+  await batchUpdate(reqs);
+}
+function confirmDelete(msg, go){
+  openSheet(`<h3>${esc(msg)}</h3><p class="preview">This also removes it from the Google Sheet.</p>
+    <div class="actions"><button class="btn ghost" id="no">Cancel</button><button class="btn danger" id="yes">Delete</button></div>`, r => {
+    r.querySelector('#no').onclick = closeSheet; r.querySelector('#yes').onclick = go;
+  });
+}
+
+/* ---------------- add / rename stock (mirrors the Apps Script onEdit + writeToDash) ---------------- */
+function openStockForm(S){
+  if (state.readOnly) return toast('View-only access', true);
+  openSheet(`
+    <h3>${S ? 'Edit stock' : 'Add stock'}</h3>
+    <form id="f">
+      <div class="field"><label>Name (becomes the sheet tab name)</label><input name="name" required autocapitalize="characters" value="${esc(S ? S.name : '')}" placeholder="e.g. INFY"></div>
+      <div class="field"><label>Google Finance code</label><input name="code" required autocapitalize="characters" value="${esc(S ? (S.code || '') : '')}" placeholder="e.g. NSE:INFY">
+        <div class="hint">Used for the live price, e.g. NSE:INFY or BOM:500209.</div></div>
+      <div class="actions"><button type="button" class="btn ghost" id="cancel">Cancel</button><button class="btn" type="submit">Save</button></div>
+    </form>`, root => {
+      root.querySelector('#cancel').onclick = closeSheet;
+      const f = root.querySelector('#f');
+      f.onsubmit = e => {
+        e.preventDefault();
+        const name = f.name.value.trim(), code = f.code.value.trim().toUpperCase();
+        if (!name || !code) return;
+        if (/^\d+$/.test(name)) return toast('Use letters in the name (number-only names are kept for empty slots)', true);
+        if (NON_STOCK.has(name)) return toast('That name is reserved', true);
+        const clash = state.sheets.find(s => s.title.toLowerCase() === name.toLowerCase() && s.title !== (S && S.name));
+        if (clash) return toast(`A sheet called “${clash.title}” already exists`, true);
+        save(async () => {
+          const finalName = await saveStock(S ? S.name : null, name, code);
+          await loadAll(); await loadStock(finalName);
+          if (location.hash !== '#/stock/' + encodeURIComponent(finalName)) location.hash = '#/stock/' + encodeURIComponent(finalName);
+          else renderStock();
+        }, S ? 'Stock updated' : 'Stock added');
+      };
+  });
+}
+
+async function saveStock(oldName, name, code){
+  await loadAll();                                   // fresh sheet list + dashboard
+  let target = oldName;
+  if (!target) {
+    // use an empty slot sheet (tabs named 7, 8, 9 ...) if there is one
+    const slot = state.sheets.filter(s => /^\d+$/.test(s.title)).sort((a, b) => a.index - b.index)[0];
+    if (slot) target = slot.title;
+    else {
+      // no empty slot: copy an existing stock sheet and clear its transactions
+      const src = state.stocks[0];
+      if (!src) throw new Error('No template sheet to copy. Add an empty slot sheet in Google Sheets.');
+      const lastIdx = Math.max(...state.sheets.filter(s => !NON_STOCK.has(s.title)).map(s => s.index));
+      await batchUpdate([{duplicateSheet: {sourceSheetId: sheetId(src.name), insertSheetIndex: lastIdx + 1, newSheetName: name}}]);
+      await api('/values:batchClear', {method: 'POST', body: {ranges: [`${q(name)}!B${TX_FIRST}:F${TX_LAST}`]}});
+      await loadAll();
+    }
+  }
+  if (target && target !== name) {
+    await batchUpdate([{updateSheetProperties: {properties: {sheetId: sheetId(target), title: name}, fields: 'title'}}]);
+  }
+  // find the dashboard row for this stock (by old name), else the next free row from mem!C4
+  const lookFor = target || name;
+  let idx = state.dashNames.findIndex(v => v.trim() === lookFor);
+  let row = idx >= 0 ? DASH_FIRST + idx : state.memC4 + 1;
+  if (row > DASH_LAST) throw new Error(`Dashboard is full (rows ${DASH_FIRST}–${DASH_LAST}).`);
+  const A = `A${row}`;
+  const data = [
+    {range: `${q(name)}!B1`, values: [[name]]},
+    {range: `${q(name)}!D1`, values: [[code]]},
+    {range: `${q(DASH)}!A${row}:D${row}`, values: [[name,
+      `=INDIRECT("'" & ${A} & "'!D1")`, `=INDIRECT("'" & ${A} & "'!J1")`, `=INDIRECT("'" & ${A} & "'!H1")`]]}
+  ];
+  if (row > state.memC4) data.push({range: `${q(MEM)}!C4`, values: [["'" + row]]});   // keep mem in sync for the Apps Script
+  await writeValues(data);
+  return name;
+}
+
+/* ---------------- cash flow (CAGR rows 3–27) ---------------- */
+function openCashForm(c){
+  if (state.readOnly) return toast('View-only access', true);
+  const type = c ? ((isNum(c.amount) ? c.amount < 0 : /^DEP/i.test(c.type)) ? 'DEP' : 'WIT') : 'DEP';
+  const amt = c ? (isNum(c.amount) ? Math.abs(c.amount) : (parseFloat(String(c.amount).replace(/[^\d.]/g, '')) || '')) : '';
+  openSheet(`
+    <h3>${c ? 'Edit entry' : 'Add deposit / withdrawal'}</h3>
+    <div class="seg" data-seg="type" data-value="${type}">
+      <button type="button" data-v="DEP" class="${type === 'DEP' ? 'on' : ''}">Deposit</button>
+      <button type="button" data-v="WIT" class="${type === 'WIT' ? 'on' : ''}">Withdraw</button>
+    </div>
+    <form id="f">
+      <div class="field"><label>Date</label><input type="date" name="date" required value="${c ? isoDate(c.date) : todayIso()}"></div>
+      <div class="field"><label>Amount (₹)</label><input name="amt" inputmode="decimal" required placeholder="0" value="${amt}">
+        ${c && !isNum(c.amount) ? `<div class="hint">Sheet has “${esc(c.amount)}”, which isn't counted in totals.</div>` : ''}</div>
+      <div class="actions">
+        ${c ? '<button type="button" class="btn danger" id="del">Delete</button>' : ''}
+        <button class="btn" type="submit">${c ? 'Save' : 'Add'}</button>
+      </div>
+    </form>`, root => {
+      segment(root, 'type');
+      const f = root.querySelector('#f'), seg = root.querySelector('[data-seg="type"]');
+      f.onsubmit = e => {
+        e.preventDefault();
+        const a = parseFloat(f.amt.value), t = seg.dataset.value;
+        if (!(a > 0)) return toast('Enter an amount above 0', true);
+        const row = c ? c.row : (state.cash.at(-1)?.row ?? CF_FIRST - 1) + 1;
+        save(async () => {
+          await writeValues([{range: `${q(CAGR)}!A${row}:C${row}`, values: [[dateFormula(f.date.value), t === 'DEP' ? -a : a, t]]}]);
+          await loadAll(); renderCash();
+        }, c ? 'Entry updated' : 'Entry added');
+      };
+      const d = root.querySelector('#del');
+      if (d) d.onclick = () => confirmDelete('Delete this entry?', () => save(async () => {
+        await shiftUp(CAGR, c.row, CF_LAST, 0, 3); await loadAll(); renderCash();
+      }, 'Entry deleted'));
+  });
+}
+
+/* ---------------- sign-in screen + boot ---------------- */
+function renderSignIn(msg = ''){
+  ['#tabs', '#fab', '#backBtn', '#refreshBtn', '#editStockBtn'].forEach(s => $(s).hidden = true);
+  $('#title').textContent = 'Portfolio';
+  app.innerHTML = `<div class="center">
+    <div class="logo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/></svg></div>
+    <h2>Stock portfolio</h2>
+    <p>Sign in with the Google account the portfolio sheet is shared with. Editors can add and change entries; viewers can only look.</p>
+    ${msg ? `<p class="down">${esc(msg)}</p>` : ''}
+    <button class="btn gbtn" id="signin"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>
+  </div>`;
+  $('#signin').onclick = async () => {
+    try { await requestToken(token ? '' : 'consent'); await afterSignIn(); }
+    catch (e) { renderSignIn(e.message === 'popup_closed' ? '' : 'Sign-in failed: ' + e.message); }
+  };
+}
+async function afterSignIn(){
+  api('https://www.googleapis.com/oauth2/v3/userinfo').then(u => { userEmail = u.email || ''; const w = document.querySelector('.who'); if (w && userEmail && !w.textContent.includes('@')) route(); }).catch(() => {});
+  await route(true);
+}
+function boot(){
+  if (CLIENT_ID.startsWith('YOUR_') || SHEET_ID.startsWith('YOUR_')) {
+    app.innerHTML = `<div class="center"><h2>Almost there</h2><p>Open <b>index.html</b> and set <code>CLIENT_ID</code> and <code>SHEET_ID</code> at the top of the script. See README.md.</p></div>`;
+    return;
+  }
+  initAuth(); loadToken();
+  if (token) afterSignIn(); else renderSignIn();
+}
+</script>
+<script src="https://accounts.google.com/gsi/client" async defer onload="boot()"></script>
+</body>
+</html>
