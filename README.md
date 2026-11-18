@@ -29,13 +29,13 @@ Copy the sheet ID from the URL: `https://docs.google.com/spreadsheets/d/`**`THIS
    - Copy the **Client ID**.
 
 ## 3. Configure and publish
-1. Open `index.html` and set the two values at the top of the script:
+1. Open `app.js` and set the two values at the top:
    ```js
    const CLIENT_ID = '1234-abc.apps.googleusercontent.com';
    const SHEET_ID  = '1AbC...xyz';
    ```
    Both are safe to make public. Access is enforced by Google sign-in plus sheet sharing.
-2. Create a GitHub repo, add `index.html`, then go to **Settings → Pages → Deploy from branch → main / root**.
+2. Create a GitHub repo, add `index.html`, `styles.css` and `app.js`, then go to **Settings → Pages → Deploy from branch → main / root**.
 3. Open `https://<username>.github.io/<repo>/` on your phone. Tip: use "Add to Home screen" so it opens like an app.
 
 ## 4. Share the sheet
