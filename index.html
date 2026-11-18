@@ -14,7 +14,38 @@
   --line:#e1e4de; --accent:#1f6f5c; --accent-ink:#ffffff; --up:#13804b; --down:#c2362b;
   --shadow:0 1px 2px rgba(20,24,28,.06),0 4px 16px rgba(20,24,28,.05);
   --r:14px;
+  /* stock colours (fixed order, colour-blind checked) */
+  --s1:#2a78d6; --s2:#eb6834; --s3:#1baf7a; --s4:#eda100; --s5:#e87ba4; --s6:#008300; --s7:#6250d6; --s8:#e34948; --s-other:#9a9a95;
 }
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --s-other:#6f6f6a; }
+}
+:root[data-theme="dark"]{ --s1:#3987e5; --s2:#d95926; --s3:#199e70; --s4:#c98500; --s5:#d55181; --s6:#0ca30c; --s7:#9085e9; --s8:#e66767; --s-other:#6f6f6a; }
+
+/* colourful dashboard */
+.badge{width:38px;height:38px;border-radius:11px;flex-shrink:0;display:grid;place-items:center;font-weight:700;font-size:13px;
+  color:#fff;background:var(--c,var(--s-other));letter-spacing:-.02em}
+.badge.dk{color:#0b0b0b}
+.row.closed .badge{background:var(--surface-2);color:var(--muted)}
+.pill{display:inline-block;padding:1px 7px;border-radius:7px;font-size:12px;font-weight:600}
+.pill.up{background:color-mix(in srgb,var(--up) 14%,transparent)}
+.pill.down{background:color-mix(in srgb,var(--down) 14%,transparent)}
+.alloc{padding:14px}
+.alloc-bar{display:flex;gap:2px;height:14px;border-radius:7px;overflow:hidden;background:var(--surface-2)}
+.alloc-bar span{display:block;height:100%;background:var(--c);min-width:3px;cursor:pointer;transition:opacity .15s}
+.alloc-bar:hover span{opacity:.45} .alloc-bar span:hover,.alloc-bar span.hl{opacity:1}
+.alloc-leg{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:12px;font-size:13px}
+.alloc-leg div{display:flex;align-items:center;gap:7px;min-width:0}
+.alloc-leg i{width:10px;height:10px;border-radius:3px;background:var(--c);flex-shrink:0}
+.alloc-leg b{font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.alloc-leg em{font-style:normal;color:var(--muted)}
+.alloc-tip{font-size:12.5px;color:var(--muted);margin-top:8px;min-height:18px}
+.hero.loss{background:linear-gradient(135deg,#a8352c,#c2362b)}
+.hero{background:linear-gradient(135deg,#1f6f5c,#2a8b6f)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .hero{background:linear-gradient(135deg,#2a9d7c,#4cc3a0)} :root:not([data-theme="light"]) .hero.loss{background:linear-gradient(135deg,#d0574c,#ff7a6e);color:#2a0805}}
+:root[data-theme="dark"] .hero{background:linear-gradient(135deg,#2a9d7c,#4cc3a0)}
+:root[data-theme="dark"] .hero.loss{background:linear-gradient(135deg,#d0574c,#ff7a6e);color:#2a0805}
+.stat.up-bg{border-left:4px solid var(--up)} .stat.down-bg{border-left:4px solid var(--down)}
 @media (prefers-color-scheme: dark){
   :root:not([data-theme="light"]){
     --bg:#0f1720; --surface:#17212b; --surface-2:#1e2a36; --ink:#e8ecef; --muted:#93a0ab;
@@ -389,9 +420,27 @@ function renderPortfolio(){
   const T = state.totals;
   const stocks = [...state.stocks].sort((a, b) => (n0(b.qty) > 0) - (n0(a.qty) > 0) || n0(b.value) - n0(a.value));
   setChrome({title: 'Portfolio', fab: () => openStockForm(null)});
+  // colour follows the stock (by its dashboard row), never its rank; 9th+ stock is grey
+  const byRow = [...state.stocks].sort((a, b) => a.row - b.row);
+  const colorOf = s => { const i = byRow.indexOf(s); return i < 8 ? `var(--s${i + 1})` : 'var(--s-other)'; };
+  const darkText = s => byRow.indexOf(s) === 3;   // yellow needs dark text
+  const held = byRow.filter(s => n0(s.qty) > 0 && n0(s.value) > 0);
+  const totalV = held.reduce((t, s) => t + s.value, 0);
+  const initials = n => n.replace(/[^A-Za-z0-9 ]/g, '').split(/\s+/).filter(Boolean).map(w => w[0]).join('').slice(0, 2).toUpperCase() || n.slice(0, 2).toUpperCase();
+  const allocHtml = totalV > 0 ? `
+    <div class="sec-h"><h2>Allocation</h2></div>
+    <div class="card alloc">
+      <div class="alloc-bar" role="img" aria-label="Allocation by current value">
+        ${held.map(s => `<span style="--c:${colorOf(s)};flex:${s.value}" data-tip="${esc(s.name)}: ${inr(s.value)} · ${(s.value / totalV * 100).toFixed(1)}%"></span>`).join('')}
+      </div>
+      <div class="alloc-tip" id="allocTip">Tap a colour for details</div>
+      <div class="alloc-leg">
+        ${[...held].sort((a, b) => b.value - a.value).map(s => `<div><i style="--c:${colorOf(s)}"></i><b>${esc(s.name)}</b><em class="num">${(s.value / totalV * 100).toFixed(1)}%</em></div>`).join('')}
+      </div>
+    </div>` : '';
   app.innerHTML = `
     ${roNote()}
-    <section class="hero">
+    <section class="hero ${n0(T.pl) < 0 ? 'loss' : ''}">
       <div class="lbl">Current value</div>
       <div class="big num">${inr(T.value)}</div>
       <div class="grid">
@@ -400,22 +449,28 @@ function renderPortfolio(){
         <div><div class="k">Return</div><div class="v num">${pct(T.gain)}</div></div>
       </div>
     </section>
+    ${allocHtml}
     <div class="sec-h"><h2>Holdings · ${stocks.filter(s => n0(s.qty) > 0).length}</h2></div>
     <div class="card list">
       ${stocks.length ? stocks.map(s => `
         <a class="row ${n0(s.qty) > 0 ? '' : 'closed'}" href="#/stock/${encodeURIComponent(s.name)}">
+          <span class="badge ${darkText(s) ? 'dk' : ''}" style="--c:${colorOf(s)}">${esc(initials(s.name))}</span>
           <div class="main"><div class="t">${esc(s.name)}</div>
             <div class="s num">${n0(s.qty) > 0 ? `${qty(s.qty)} × ${inr2(s.avg)} · LTP ${inr2(s.live)}` : 'No holding'}</div></div>
           <div class="end"><div class="t num">${inr(s.value)}</div>
-            <div class="s num ${cls(s.pl)}">${signed(s.pl)} (${pct(s.gain)})</div></div>
+            <div class="s num"><span class="pill ${cls(s.pl)}">${signed(s.pl)} · ${pct(s.gain)}</span></div></div>
         </a>`).join('') : '<div class="empty">No stocks yet. Tap + to add one.</div>'}
     </div>
     <div class="sec-h"><h2>Overall</h2></div>
     <div class="stats" style="margin-top:0">
-      <div class="card stat"><div class="k">Capital invested</div><div class="v num">${inr(T.capital)}</div></div>
-      <div class="card stat"><div class="k">Net profit</div><div class="v num ${cls(T.profit)}">${signed(T.profit)}</div><div class="k num ${cls(T.profitPct)}">${pct(T.profitPct)}</div></div>
+      <div class="card stat" style="border-left:4px solid var(--s1)"><div class="k">Capital invested</div><div class="v num">${inr(T.capital)}</div></div>
+      <div class="card stat ${n0(T.profit) < 0 ? 'down-bg' : 'up-bg'}"><div class="k">Net profit</div><div class="v num ${cls(T.profit)}">${signed(T.profit)}</div><div class="k num ${cls(T.profitPct)}">${pct(T.profitPct)}</div></div>
     </div>
     ${footer()}`;
+  app.querySelectorAll('.alloc-bar span').forEach(sp => {
+    const show = () => { app.querySelectorAll('.alloc-bar span').forEach(x => x.classList.toggle('hl', x === sp)); $('#allocTip').textContent = sp.dataset.tip; };
+    sp.onmouseenter = show; sp.onclick = show;
+  });
   bindFooter();
 }
 
