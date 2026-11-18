@@ -174,11 +174,11 @@ const CLIENT_ID = '677982929742-kmp13d15p1qa6tn4539vauaelq8rbh70.apps.googleuser
 const SHEET_ID  = '1TZILXsDwkAQQvo8An_L_xce-dRALl4wINy2odC_gTPA';
 
 /* Sheet layout (matches anson_portfollio_2026) */
-const DASH = 'Dash Temp', MEM = 'mem', CAGR = 'CAGR';
+let DASH = 'Dash Temp', MEM = 'mem', CAGR = 'CAGR';   // real tab names are looked up when the sheet loads
 const TX_FIRST = 5, TX_LAST = 30;          // transaction rows on each stock sheet
 const CF_FIRST = 3, CF_LAST = 27;          // CAGR rows (C30 sums B3:B27)
 const DASH_FIRST = 2, DASH_LAST = 31;      // Dash Temp name rows
-const NON_STOCK = new Set([DASH, MEM, CAGR, 'Temp Sheet', 'Dash Board']);
+let NON_STOCK = new Set([DASH, MEM, CAGR, 'Temp Sheet', 'Dash Board']);
 
 /* ---------------- utilities ---------------- */
 const $ = s => document.querySelector(s);
@@ -253,7 +253,11 @@ async function api(path, {method = 'GET', body} = {}, retried = false){
 }
 function friendly(e){
   if (e.status === 403 && e.write) { state.readOnly = true; return 'You have view-only access. Ask the owner to share the sheet with you as Editor.'; }
-  if (e.status === 403 || e.status === 404) return 'This Google account does not have access to the portfolio sheet.';
+  if (/has not been used|is disabled|SERVICE_DISABLED/i.test(e.message)) return 'The Google Sheets API is not enabled in your Google Cloud project. Enable it under APIs & Services → Library, wait 2 minutes, then try again.';
+  if (/insufficient.*scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(e.message)) return 'Sheets permission was not granted at sign-in. Sign out, sign in again and tick the "See, edit, create and delete your Google Sheets" box.';
+  if (/not supported for this document/i.test(e.message)) return 'SHEET_ID points to an Excel (.xlsx) file. Open it in Drive, use File → Save as Google Sheets, and use the new sheet\'s ID.';
+  if (e.status === 404) return 'Sheet not found. Check SHEET_ID in index.html. (Google says: ' + e.message + ')';
+  if (e.status === 403) return 'This Google account does not have access to the portfolio sheet. (Google says: ' + e.message + ')';
   return e.message || 'Something went wrong';
 }
 async function batchGet(ranges){
@@ -269,13 +273,21 @@ const state = {sheets: [], stocks: [], totals: {}, cash: [], cashSum: {}, memC4:
 const sheetId = title => (state.sheets.find(s => s.title === title) || {}).sheetId;
 
 async function loadAll(){
-  const [meta, vals] = await Promise.all([
-    api('?fields=sheets.properties(sheetId,title,index)'),
-    batchGet([`${q(DASH)}!A${DASH_FIRST}:J${DASH_LAST}`, `${q(DASH)}!F32:J32`, `${q(DASH)}!M1:N5`,
-              `${q(CAGR)}!A${CF_FIRST}:C${CF_LAST}`, `${q(CAGR)}!A28:D32`, `${q(MEM)}!C4`])
-  ]);
+  const meta = await api('?fields=sheets.properties(sheetId,title,index)');
   state.sheets = meta.sheets.map(s => s.properties);
-  const [dash, dashTot, net, cf, cfSum, mem] = vals;
+  // match tab names loosely (ignores case and spaces, e.g. "CAGR " or "Cagr")
+  const norm = s => String(s).toLowerCase().replace(/\s+/g, '');
+  const find = want => (state.sheets.find(s => norm(s.title) === norm(want)) || {}).title || null;
+  DASH = find('Dash Temp'); MEM = find('mem'); CAGR = find('CAGR');
+  NON_STOCK = new Set([DASH, MEM, CAGR, find('Temp Sheet'), find('Dash Board')].filter(Boolean));
+  if (!DASH) throw new Error(`No "Dash Temp" tab in this spreadsheet. Tabs found: ${state.sheets.map(s => s.title).join(', ')}. Check SHEET_ID.`);
+  const ranges = [`${q(DASH)}!A${DASH_FIRST}:J${DASH_LAST}`, `${q(DASH)}!F32:J32`, `${q(DASH)}!M1:N5`];
+  if (CAGR) ranges.push(`${q(CAGR)}!A${CF_FIRST}:C${CF_LAST}`, `${q(CAGR)}!A28:D32`);
+  if (MEM) ranges.push(`${q(MEM)}!C4`);
+  const vals = await batchGet(ranges);
+  let k = 3;
+  const [dash, dashTot, net] = vals;
+  const cf = CAGR ? vals[k++] : [], cfSum = CAGR ? vals[k++] : [], mem = MEM ? vals[k++] : [];
   state.dashNames = [];
   state.stocks = [];
   for (let i = 0; i <= DASH_LAST - DASH_FIRST; i++) {
@@ -296,7 +308,7 @@ async function loadAll(){
     state.cash.push({row: CF_FIRST + i, date: r[0], amount: r[1], type: String(r[2] ?? '').trim()});
   }
   state.cashSum = {net: (cfSum[0] || [])[2], capital: (cfSum[2] || [])[2], profit: (cfSum[4] || [])[2], pct: (cfSum[4] || [])[3]};
-  state.memC4 = parseInt((mem[0] || [])[0], 10) || 0;
+  state.memC4 = parseInt((mem[0] || [])[0], 10) || (DASH_FIRST - 1 + state.dashNames.reduce((last, v, i) => v.trim() ? i + 1 : last, 0));
 }
 
 async function loadStock(name){
@@ -421,6 +433,11 @@ function renderStock(){
 
 function renderCash(){
   const C = state.cashSum;
+  if (!CAGR) {
+    setChrome({title: 'Cash flow'});
+    app.innerHTML = `<div class="center"><h2>No CAGR tab</h2><p>Cash flow needs a tab named “CAGR”. Tabs in this spreadsheet: ${esc(state.sheets.map(s => s.title).join(', '))}</p>${footer()}</div>`;
+    bindFooter(); return;
+  }
   const full = (state.cash.at(-1)?.row ?? CF_FIRST - 1) >= CF_LAST;
   setChrome({title: 'Cash flow', fab: full ? null : () => openCashForm(null)});
   app.innerHTML = `
@@ -612,7 +629,7 @@ async function saveStock(oldName, name, code){
     {range: `${q(DASH)}!A${row}:D${row}`, values: [[name,
       `=INDIRECT("'" & ${A} & "'!D1")`, `=INDIRECT("'" & ${A} & "'!J1")`, `=INDIRECT("'" & ${A} & "'!H1")`]]}
   ];
-  if (row > state.memC4) data.push({range: `${q(MEM)}!C4`, values: [["'" + row]]});   // keep mem in sync for the Apps Script
+  if (MEM && row > state.memC4) data.push({range: `${q(MEM)}!C4`, values: [["'" + row]]});   // keep mem in sync for the Apps Script
   await writeValues(data);
   return name;
 }
