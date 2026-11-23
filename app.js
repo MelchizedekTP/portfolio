@@ -42,45 +42,31 @@ const dateFormula = iso => { const [y, m, d] = iso.split('-').map(Number); retur
 function toast(msg, err = false){ const t = $('#toast'); t.textContent = msg; t.className = 'toast show' + (err ? ' err' : ''); clearTimeout(toast._t); toast._t = setTimeout(() => t.className = 'toast', err ? 5000 : 2600); }
 const busy = on => $('#busy').classList.toggle('show', on);
 
-/* ---------------- auth (Google Identity Services) ---------------- */
+/* ---------------- auth (Google OAuth 2.0, full-page redirect) ----------------
+   One sign-in path, the same on every browser and device: a full-page trip to
+   Google that comes back with the token in the URL fragment. No popup (blocked
+   or broken in Brave, Safari and in-app browsers) and no gsi/client dependency,
+   so nothing can silently pick a different method.
+   This page's own address must be listed under "Authorized redirect URIs" on
+   the OAuth client in Google Cloud. */
 const SCOPES = 'https://www.googleapis.com/auth/spreadsheets email';
-let tokenClient, token = null, tokenExp = 0, pendingAuth = null, userEmail = '';
+let token = null, tokenExp = 0, userEmail = '';
 function loadToken(){ try { const s = JSON.parse(sessionStorage.getItem('tok') || 'null'); if (s && s.exp > Date.now() + 60000) { token = s.t; tokenExp = s.exp; } } catch {} }
 function saveToken(){ try { sessionStorage.setItem('tok', JSON.stringify({t: token, exp: tokenExp})); } catch {} }
 
-function initAuth(){
-  tokenClient = google.accounts.oauth2.initTokenClient({
-    client_id: CLIENT_ID, scope: SCOPES,
-    callback: r => {
-      const p = pendingAuth; pendingAuth = null;
-      if (r.error) { p && p.reject(new Error(r.error)); return; }
-      token = r.access_token; tokenExp = Date.now() + (r.expires_in - 60) * 1000; saveToken();
-      p && p.resolve();
-    },
-    error_callback: e => { const p = pendingAuth; pendingAuth = null; p && p.reject(new Error(e.type || 'auth_failed')); }
-  });
-}
-function requestToken(prompt){
-  if (!tokenClient || authMode() === 'redirect') { redirectSignIn(); return new Promise(() => {}); }
-  return new Promise((resolve, reject) => { pendingAuth = {resolve, reject}; tokenClient.requestAccessToken({prompt, hint: userEmail || undefined}); });
-}
-/* One refresh at a time: there is a single pendingAuth slot, so two calls racing
-   here would leave the first promise unsettled (and the busy overlay stuck). */
-let refreshing = null;
-async function ensureToken(){
-  if (token && Date.now() <= tokenExp) return;
-  refreshing = refreshing || requestToken('').finally(() => { refreshing = null; });
-  await refreshing;
-}
+/* No token, or an expired one: raise instead of redirecting from here. Google
+   tokens last an hour, and leaving mid-edit would throw away what was typed,
+   so the caller shows the sign-in screen and the user chooses when to go. */
+const authError = () => Object.assign(new Error('session_expired'), {auth: true});
+async function ensureToken(){ if (!token || Date.now() > tokenExp) throw authError(); }
 
-/* Full-page sign-in (no popup). Works better in Brave, Safari, phones and with several Google accounts.
-   Needs this page's URL added under "Authorized redirect URIs" on the OAuth client. */
-const authMode = () => { try { return localStorage.getItem('authMode') || 'popup'; } catch { return 'popup'; } };
-function redirectSignIn(){
+function signIn(prompt = 'select_account'){
   const st = Math.random().toString(36).slice(2) + Date.now().toString(36);
-  try { sessionStorage.setItem('oauthState', st); localStorage.setItem('authMode', 'redirect'); } catch {}
-  const p = new URLSearchParams({client_id: CLIENT_ID, redirect_uri: location.origin + location.pathname, response_type: 'token',
-    scope: SCOPES, include_granted_scopes: 'true', state: st, prompt: 'select_account'});
+  try { sessionStorage.setItem('oauthState', st); } catch {}
+  const p = new URLSearchParams({client_id: CLIENT_ID, redirect_uri: location.origin + location.pathname,
+    response_type: 'token', scope: SCOPES, include_granted_scopes: 'true', state: st});
+  if (prompt) p.set('prompt', prompt);                        // account chooser on a deliberate sign-in
+  else if (userEmail) p.set('login_hint', userEmail);         // re-auth: straight back to the same account
   location.href = 'https://accounts.google.com/o/oauth2/v2/auth?' + p;
 }
 function readRedirectToken(){            // returns null, {ok:true} or {error}
@@ -94,7 +80,8 @@ function readRedirectToken(){            // returns null, {ok:true} or {error}
   return {ok: true};
 }
 function signOut(){
-  if (token && window.google) google.accounts.oauth2.revoke(token, () => {});
+  // no-cors: the reply is not readable, and does not need to be
+  if (token) { try { fetch('https://oauth2.googleapis.com/revoke?token=' + encodeURIComponent(token), {method: 'POST', mode: 'no-cors', keepalive: true}); } catch {} }
   token = null; tokenExp = 0; userEmail = '';            // hint must go, or the next sign-in is pinned to this account
   try { sessionStorage.removeItem('tok'); } catch {}
   Object.assign(state, {sheets: [], stocks: [], totals: {}, cash: [], cashSum: {},
@@ -121,6 +108,7 @@ async function api(path, {method = 'GET', body} = {}, retried = false){
   return res.json();
 }
 function friendly(e){
+  if (e.auth) return 'Your session has expired. Sign in again to continue.';
   if (e.status === 403 && e.write) { state.readOnly = true; return 'You have view-only access. Ask the owner to share the sheet with you as Editor.'; }
   if (/has not been used|is disabled|SERVICE_DISABLED/i.test(e.message)) return 'The Google Sheets API is not enabled in your Google Cloud project. Enable it under APIs & Services → Library, wait 2 minutes, then try again.';
   if (/insufficient.*scope|ACCESS_TOKEN_SCOPE_INSUFFICIENT/i.test(e.message)) return 'Sheets permission was not granted at sign-in. Sign out, sign in again and tick the "See, edit, create and delete your Google Sheets" box.';
@@ -226,6 +214,7 @@ async function route(force = false){
     } else if (h.startsWith('#/cash')) renderCash();
     else renderPortfolio();
   } catch (e) {
+    if (e.auth) return renderSignIn('Your session has expired. Sign in again to continue.', '');
     app.innerHTML = `<div class="center"><h2>Couldn't load</h2><p>${esc(friendly(e))}</p><button class="btn" id="retry">Try again</button>${footer()}</div>`;
     $('#retry').onclick = () => route(true); bindFooter();
   }
@@ -381,7 +370,10 @@ function segment(root, name, onChange){
 async function save(fn, okMsg){
   busy(true);
   try { await fn(); closeSheet(); toast(okMsg); }
-  catch (e) { toast(friendly(e), true); if (state.readOnly) route(); }
+  catch (e) {
+    if (e.auth) { closeSheet(); renderSignIn('Your session has expired. Sign in again — that change was not saved.', ''); }
+    else { toast(friendly(e), true); if (state.readOnly) route(); }
+  }
   finally { busy(false); }
 }
 
@@ -572,7 +564,7 @@ function openCashForm(c){
 }
 
 /* ---------------- sign-in screen + boot ---------------- */
-function renderSignIn(msg = ''){
+function renderSignIn(msg = '', prompt = 'select_account'){
   ['#tabs', '#fab', '#backBtn', '#refreshBtn', '#editStockBtn'].forEach(s => $(s).hidden = true);
   $('#title').textContent = 'Portfolio';
   app.innerHTML = `<div class="center">
@@ -581,24 +573,12 @@ function renderSignIn(msg = ''){
     <p>Sign in with the Google account the portfolio sheet is shared with. Editors can add and change entries; viewers can only look.</p>
     ${msg ? `<div class="ro" style="max-width:360px;text-align:left">${esc(msg)}</div>` : ''}
     <button class="btn gbtn" id="signin"><svg width="18" height="18" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3C33.7 32.7 29.2 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.4-.4-3.5z"/><path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 15.1 19 12 24 12c3.1 0 5.8 1.2 7.9 3.1l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.3 6.3 14.7z"/><path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2C29.2 35.1 26.7 36 24 36c-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.5 39.6 16.2 44 24 44z"/><path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.2-2.2 4.2-4.1 5.6l6.2 5.2C37 39.2 44 34 44 24c0-1.3-.1-2.4-.4-3.5z"/></svg>Sign in with Google</button>
-    ${msg ? '<button class="btn ghost" id="signinRedirect">Sign in without popup</button>' : ''}
   </div>`;
-  $('#signin').onclick = async () => {
-    try { await requestToken(token ? '' : 'consent'); await afterSignIn(); }
-    catch (e) {
-      const m = e.message;
-      if (m === 'popup_closed' || m === 'access_denied')
-        renderSignIn('The Google sign-in window closed before sign-in finished. This often happens in Brave, Safari, or when several Google accounts are signed in. Tap “Sign in without popup” below, or open this page in Chrome.');
-      else if (m === 'popup_failed_to_open')
-        renderSignIn('The sign-in popup was blocked. Tap “Sign in without popup” below, or open the link in Chrome/Safari (not inside WhatsApp, Instagram or Gmail).');
-      else renderSignIn('Sign-in failed: ' + m);
-    }
-  };
-  const r = $('#signinRedirect'); if (r) r.onclick = redirectSignIn;
+  $('#signin').onclick = () => signIn(prompt);
 }
 const REDIRECT_ERRORS = {
   access_denied: 'Sign-in was cancelled, or the Google Sheets permission was not allowed. Try again and tick the Google Sheets box.',
-  redirect_uri_mismatch: 'Full-page sign-in is not set up yet: add this page’s address to “Authorized redirect URIs” on the OAuth client in Google Cloud.',
+  redirect_uri_mismatch: 'This page’s address is not allowed by the OAuth client. Add ' + location.origin + location.pathname + ' under “Authorized redirect URIs” in Google Cloud, wait a minute, then try again.',
   state_mismatch: 'Sign-in could not be verified. Please try again.'
 };
 async function afterSignIn(){
@@ -610,11 +590,10 @@ function boot(){
     app.innerHTML = `<div class="center"><h2>Almost there</h2><p>Open <b>app.js</b> and set <code>CLIENT_ID</code> and <code>SHEET_ID</code> at the top. See README.md.</p></div>`;
     return;
   }
-  if (window.google && google.accounts) initAuth();
+  try { localStorage.removeItem('authMode'); } catch {}   // left over from the old popup/redirect switch
   const red = readRedirectToken();
+  if (red && red.error) { renderSignIn(REDIRECT_ERRORS[red.error] || 'Sign-in failed: ' + red.error); return; }
   if (!red) loadToken();
-  if (red && red.error) { try { localStorage.removeItem('authMode'); } catch {} renderSignIn(REDIRECT_ERRORS[red.error] || 'Sign-in failed: ' + red.error); return; }
   if (token) afterSignIn(); else renderSignIn();
 }
-let booted = false;
-const bootOnce = () => { if (!booted) { booted = true; boot(); } };
+boot();

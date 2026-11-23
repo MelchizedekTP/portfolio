@@ -21,11 +21,12 @@ Copy the sheet ID from the URL: `https://docs.google.com/spreadsheets/d/`**`THIS
    - Add the scope `.../auth/spreadsheets`.
    - While the app is in **Testing**, add every user's Gmail under **Test users** (up to 100).
 4. **Credentials → Create credentials → OAuth client ID → Web application**
-   - Authorized JavaScript origins: `https://<your-github-username>.github.io`
-     (add `http://localhost:8000` too if you want to test locally)
-   - Authorized redirect URIs (for "Sign in without popup"): add the exact page address, e.g.
-     `https://<your-github-username>.github.io/<repo>/` (with the trailing `/`). If people open
-     `.../<repo>/index.html`, add that address as well.
+   - **Authorized redirect URIs — required.** Sign-in is a full-page redirect, so the exact page
+     address must be listed here, e.g. `https://<your-github-username>.github.io/<repo>/`
+     (with the trailing `/`). If people open `.../<repo>/index.html`, add that address too, and
+     add `http://localhost:8000/` if you want to test locally. A missing entry gives
+     `redirect_uri_mismatch` at sign-in, and the app tells you which address to add.
+   - Authorized JavaScript origins: not used by this site — leave it empty or fill it in, either works.
    - Copy the **Client ID**.
 
 ## 3. Configure and publish
@@ -56,3 +57,6 @@ Dates are written as `=DATE(y,m,d)`, so they are correct whatever the sheet's lo
 - Your Apps Script `onEdit` keeps working for edits made inside Google Sheets. It does **not** run for edits from the website (Google never fires simple triggers for API edits), which is why the site does the rename and dashboard update itself.
 - In Testing mode, Google asks users to re-approve about every 7 days. To avoid that, publish the consent screen, or use Internal with Workspace.
 - Live prices come from GOOGLEFINANCE inside the sheet. Use the refresh button to pull the latest values.
+- Sign-in is always a full-page redirect to Google and back — no popup, so it behaves the same in
+  Chrome, Brave, Safari and in-app browsers. The token lives in `sessionStorage` and lasts an hour;
+  after that the app shows "session expired" and one tap signs you back in.
