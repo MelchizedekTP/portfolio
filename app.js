@@ -10,7 +10,7 @@ const SHEET_ID  = '1TZILXsDwkAQQvo8An_L_xce-dRALl4wINy2odC_gTPA';
 let DASH = 'Dash Temp', MEM = 'mem', CAGR = 'CAGR';   // real tab names are looked up when the sheet loads
 const TX_FIRST = 5, TX_LAST = 30;          // transaction rows on each stock sheet
 const CF_FIRST = 3, CF_LAST = 27;          // CAGR rows (C30 sums B3:B27)
-const DASH_FIRST = 2, DASH_LAST = 31;      // Dash Temp name rows
+const DASH_FIRST = 2, DASH_LAST = 31;      // Dash Temp name rows; the totals row sits directly below (see TOT)
 let NON_STOCK = new Set([DASH, MEM, CAGR, 'Temp Sheet', 'Dash Board']);
 
 /* ---------------- utilities ---------------- */
@@ -139,7 +139,8 @@ async function loadAll(){
   DASH = find('Dash Temp'); MEM = find('mem'); CAGR = find('CAGR');
   NON_STOCK = new Set([DASH, MEM, CAGR, find('Temp Sheet'), find('Dash Board')].filter(Boolean));
   if (!DASH) throw new Error(`No "Dash Temp" tab in this spreadsheet. Tabs found: ${state.sheets.map(s => s.title).join(', ')}. Check SHEET_ID.`);
-  const ranges = [`${q(DASH)}!A${DASH_FIRST}:J${DASH_LAST}`, `${q(DASH)}!F32:J32`, `${q(DASH)}!M1:N5`];
+  const TOT = DASH_LAST + 1;               // totals row follows the names block, so it moves with DASH_LAST
+  const ranges = [`${q(DASH)}!A${DASH_FIRST}:J${DASH_LAST}`, `${q(DASH)}!F${TOT}:J${TOT}`, `${q(DASH)}!M1:N5`];
   if (CAGR) ranges.push(`${q(CAGR)}!A${CF_FIRST}:C${CF_LAST}`, `${q(CAGR)}!A28:D32`);
   if (MEM) ranges.push(`${q(MEM)}!C4`);
   const vals = await batchGet(ranges);
